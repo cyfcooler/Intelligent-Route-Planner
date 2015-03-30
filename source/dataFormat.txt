@@ -1,0 +1,94 @@
+2种情况：
+
+直达路线的数据：
+{
+	start: string, 起点, 3字母站名编码，如北京：BJH
+	end: 终点, 其余同上，和start不会相同
+	train_code: string, 列车编号，如K739
+	start_time: string, 格式HH:MM, 如23:06
+	end_time: 同上
+	total_duration: number, 总耗时，单位分钟
+	ticket_info: object
+	{
+		num: object, 用户所需坐席的数量，只有满足用户条件且有票的field才会出现，如{ze_num: 23, yz_num: 321}
+		{
+			swz_num: number, 商务座数量,
+			tz_num: '特等座',
+			zy_num: '一等座',
+			ze_num: '二等座',
+			gr_num: '高级软卧',
+			rw_num: '软卧',
+			yw_num: '硬卧',
+			rz_num: '软座',
+			yz_num: '硬座',
+			wz_num: '无座',
+			qt_num: '其它'
+		}
+		price: object, 用户所需坐席的价格，单位：角 （所以最后得/10）。除了min_price, 其它field只有满足用户条件且有票的时候才会出现，如{min_price: 321, ze_price: 2310, yz_price: 321}
+		{
+			min_price: number, 所有票中的最低价格，一定会出现的field
+			swz_price: number, 商务座价格,
+			tz_price: '特等座',
+			zy_price: '一等座',
+			ze_price: '二等座',
+			gr_price: '高级软卧',
+			rw_price: '软卧',
+			yw_price: '硬卧',
+			rz_price: '软座',
+			yz_price: '硬座',
+			wz_price: '无座',
+			qt_price: '其它'
+		}
+	}
+}
+
+转车路线的数据:
+{
+	start: string, 起点, 3字母站名编码，如北京：BJH
+	end: 终点, 其余同上，和start不会相同
+	transfer: array[2]
+	[
+		string, 3字母站名编码, 第一辆列车到达的站,
+		string, 3字母站名编码, 第二辆列车出发的站, 可能和[0]相同或者不同
+	],
+	wait_time: number, 等待时间, 单位分钟
+	train_code: array[2]
+	[
+		string, 第一辆列车编号,如K739
+		string, 第二辆列车编号,和第一辆车不会相同
+	],
+	start_time: array[2]
+	[
+		string, 第一辆列车出发时间, 格式HH:MM, 如23:06
+		string, 第二辆列车出发时间
+	],
+	end_time: array[2], 类似start_time
+	duration: array[2]
+	[
+		number, 第一辆列车耗时, 单位分钟
+		number, 第二辆列车耗时, 单位分钟
+	]
+	total_duration: number, 总耗时(duration[0] + wait_time + duration[1])，单位分钟
+	ticket_info: array[2]
+	[
+		object, 第一辆列车票信息，定义见直达路线里的ticket_info
+		object, 第二辆列车票信息，定义见直达路线里的ticket_info
+	],
+}
+
+
+
+算法支持以下几个选项（约束条件）可以供用户输入：
+1. 出发日期
+2. 起点
+3. 终点
+4. 转车最小等待时间
+5. 转车最大等待时间
+6. 结果按照价格还是时间排序
+7. 出发时间区间
+8. 到达时间区间
+9. 所需票的张数， 共11种类型的票可以制定
+10. 花费时间的上限
+11. 花费钱的上限
+12. 同站换乘or同城换乘
+13. 返回的结果数量
