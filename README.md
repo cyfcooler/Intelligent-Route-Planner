@@ -1,2 +1,2 @@
 # Intelligent-Route-Planner
-Intelligent Route Planner to provide the smartest way for your travelling.
+Intelligent Route Planner: provide the smartest way for your travelling.
