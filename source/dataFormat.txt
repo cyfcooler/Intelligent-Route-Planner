@@ -1,14 +1,12 @@
-2种情况：
-
-直达路线的数据：
+train_info: object
 {
-	start: string, 起点, 3字母站名编码，如北京：BJH
-	end: 终点, 其余同上，和start不会相同
-	train_code: string, 列车编号，如K739
-	start_time: string, 格式HH:MM, 如23:06
-	end_time: 同上
-	total_duration: number, 总耗时，单位分钟
-	ticket_info: object
+	train_code: string, 列车编号,如K739
+	start: 起点, 3字母站名编码，如北京：BJH
+	end: 终点, 和start不会相同
+	start_time: string, 列车出发时间, 格式HH:MM, 如23:06
+	end_time: string, 类似start_time
+	duration: number, 列车耗时, 单位分钟
+	ticket_info: object, 列车票信息
 	{
 		num: object, 用户所需坐席的数量，只有满足用户条件且有票的field才会出现，如{ze_num: 23, yz_num: 321}
 		{
@@ -42,53 +40,49 @@
 	}
 }
 
-转车路线的数据:
+2种情况：
+
+直达路线的数据:
 {
-	start: string, 起点, 3字母站名编码，如北京：BJH
-	end: 终点, 其余同上，和start不会相同
-	transfer: array[2]
+	train_info: array[1]
 	[
-		string, 3字母站名编码, 第一辆列车到达的站,
-		string, 3字母站名编码, 第二辆列车出发的站, 可能和[0]相同或者不同
+		object, 列车信息，定义见上train_info
 	],
-	wait_time: number, 等待时间, 单位分钟
-	train_code: array[2]
-	[
-		string, 第一辆列车编号,如K739
-		string, 第二辆列车编号,和第一辆车不会相同
-	],
-	start_time: array[2]
-	[
-		string, 第一辆列车出发时间, 格式HH:MM, 如23:06
-		string, 第二辆列车出发时间
-	],
-	end_time: array[2], 类似start_time
-	duration: array[2]
-	[
-		number, 第一辆列车耗时, 单位分钟
-		number, 第二辆列车耗时, 单位分钟
-	]
-	total_duration: number, 总耗时(duration[0] + wait_time + duration[1])，单位分钟
-	ticket_info: array[2]
-	[
-		object, 第一辆列车票信息，定义见直达路线里的ticket_info
-		object, 第二辆列车票信息，定义见直达路线里的ticket_info
-	],
+	wait_time: array[0] (空数组)
+	total_duration: number, 总耗时，单位分钟
 }
 
+转车路线的数据:
+{
+	train_info: array[2]
+	[
+		object, 第一辆列车信息，定义见上train_info
+		object, 第二辆列车信息
+	],
+	wait_time: array[1]
+	[
+		number, 等待时间, 单位分钟
+	],
+	total_duration: number, 总耗时(train_info[0].duration + wait_time[0] + train_info[1].duration)，单位分钟
+}
+
+response格式： array，array的每个元素都是以上2种格式之一
 
 
 算法支持以下几个选项（约束条件）可以供用户输入：
-1. 出发日期
-2. 起点
-3. 终点
-4. 转车最小等待时间
-5. 转车最大等待时间
-6. 结果按照价格还是时间排序
-7. 出发时间区间
-8. 到达时间区间
-9. 所需票的张数， 共11种类型的票可以制定
-10. 花费时间的上限
-11. 花费钱的上限
-12. 同站换乘or同城换乘
-13. 返回的结果数量
+放在request body里
+必填												参数名																								参数类型
+1. 出发日期											date: 格式：YYYY-MM-DD																				string
+2. 起点												start: 3字母站名编码																					string
+3. 终点												end: 3字母站名编码																					string
+4. 结果按照价格还是时间排序							sort_by: "price" or "time"																			string
+选填
+5. 转车最小等待时间									min_wait_time																						number
+6. 转车最大等待时间									max_wait_time																						number
+7. 出发时间区间										start_time_range: 长度为2的number数组，array[0]<=array[1]，number范围为0~24，如[5,24][0,13][0,24]等		array[2]
+8. 到达时间区间										end_time_range: 同上																				array[2]
+9. 所需票的张数， 共11种类型的票可以制定				seat_type: 格式为长度为11的0-1数组，如[1,1,0,0,1,1,0,0,1,0,1]											array[11]
+10. 花费时间的上限									max_time																							number
+11. 花费钱的上限										max_price																							number
+12. 同站换乘or同城换乘								same_station_transfer: true or false																boolean
+13. 返回的结果数量									max_result																							number
