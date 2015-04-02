@@ -12,7 +12,7 @@ function checkSameStationsOrder() {
 		console.log('get all stations. length: ' + stations.length);
 		
 		stations.forEach(function(station_info){
-			var same_stations = station_info.value.data.sameStations;
+			var same_stations = JSON.parse(station_info.value.data.sameStations);
 			if(same_stations.length > 0) {
 				// some stations are not in the sameStations array, e.g. sameStations of RNH(金华南) is only JBH(金华), no RNH(金华南), so some logic below is to handle this case.
 				var in_same_stations = false;
@@ -40,7 +40,7 @@ function checkSameStationsOrder() {
 		});
 		
 		stations.forEach(function(station_info){
-			var same_stations = station_info.value.data.sameStations;
+			var same_stations = JSON.parse(station_info.value.data.sameStations);
 			if(same_stations.length > 0) {
 				if(station_not_in_same_stations[station_info.key] != null) {
 					var expected = JSON.stringify(station_in_same_stations[station_not_in_same_stations[station_info.key][0]]),

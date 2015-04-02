@@ -31,7 +31,7 @@ function updateStation() {
 				}
 			}
 			
-			data[i].value.data.sameStations = Object.keys(same_stations);
+			data[i].value.data.sameStations = JSON.stringify(Object.keys(same_stations));
 			(function () {
 				// use function() scope to store the local variable station_key value
 				var station_key = data[i].key;

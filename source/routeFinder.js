@@ -176,8 +176,9 @@ function canTransfer(r1, r2) {
 	if(same_station_transfer) {
 		return r1.end === r2.start;
 	} else {
-		// all start_same_stations.length or end_same_stations.length are > 0 (checked by test/checkEmptySameStations.js), so no need to check (r1.end_same_stations.length > 0 && r2.start_same_stations.length > 0) here
-		return r1.end === r2.start || JSON.stringify(r1.end_same_stations) === JSON.stringify(r2.start_same_stations);
+		// all start_same_stations.length and end_same_stations.length are > 0 (checked by test/checkEmptySameStations.js)
+		// the same_stations order won't affect the result (checked by test/checkSameStationsOrder.js)
+		return r1.end_same_stations === r2.start_same_stations;
 	}
 }
 
