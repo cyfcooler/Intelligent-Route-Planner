@@ -8,7 +8,7 @@ var args = process.argv.splice(2),
 	start = args[1],
 	end = args[2],
 	frequency = args[3],
-	date = args[4] || '2015-04-01';
+	date = args[4] || '2015-04-10';
 
 var start = (start || 0),
 	request_index = start,

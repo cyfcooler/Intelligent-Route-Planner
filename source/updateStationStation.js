@@ -36,7 +36,7 @@ function updateStationStation() {
 }
 
 function updateStationStationInternal(train_code, start_station, end_station) {
-	mongo.updateDb('station_station', {train_code: train_code, edge:start_station + '_' + end_station}, {$set:{start_same_stations: same_station_map[start_station], end_same_stations: same_station_map[end_station]}}, function(){
+	mongo.updateDb('station_station', {train_code: train_code, edge:start_station + '_' + end_station}, {$set:{start_same_stations: same_station_map[start_station], end_same_stations: same_station_map[end_station]}}, false, function(){
 		console.log('train ' + train_code + ' from ' + start_station + ' to ' + end_station + ' updated. Remaining: ' + (end - (updated++)));
 		if(updated > end) {
 			console.log('All done !');

@@ -2,9 +2,18 @@
 
 var mongo = require('../lib/mongo.js');
 
+/*
+	key: ""
+	value: {
+		data: {
+			data: [],
+			sameStations: ""
+		}
+	}
+ */
 function checkSameStationsOrder() {
 	var same_station_count = {},
-		zero_count = 0,
+		zero_train_station = [],
 		station_in_same_stations = {},
 		station_not_in_same_stations = {};
 		
@@ -35,7 +44,7 @@ function checkSameStationsOrder() {
 					station_in_same_stations[station_info.key] = same_stations;
 				}
 			} else {
-				zero_count++;
+				zero_train_station.push(station_info.key);
 			}
 		});
 		
@@ -57,7 +66,8 @@ function checkSameStationsOrder() {
 			}
 		});
 		
-		console.log('all done ! ' + zero_count + ' stations has 0 same stations. ' + Object.keys(station_not_in_same_stations).length + ' stations are not in same stations.');
+		console.log('all done !\n' + zero_train_station.length + ' stations has 0 same station: ' + JSON.stringify(zero_train_station));
+		console.log(Object.keys(station_not_in_same_stations).length + ' stations are not in their sameStations field: ' + JSON.stringify(Object.keys(station_not_in_same_stations)));
 		mongo.closeDb();
 	});
 }

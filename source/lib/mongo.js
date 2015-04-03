@@ -114,9 +114,9 @@ exports.findAll = function(table, cb) {
 	find(table, null, cb);
 }
 
-exports.updateDb = function(table, selector, new_value, cb) {
+exports.updateDb = function(table, selector, new_value, upsert, cb) {
 	getMongo(function() {
-		dbs.collection(table).update(selector, new_value, {upsert: false}, function(err) {
+		dbs.collection(table).update(selector, new_value, {upsert: upsert}, function(err) {
 			if (!err) {
 				typeof cb == 'function' && cb.call(this);
 			} else {

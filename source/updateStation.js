@@ -35,7 +35,7 @@ function updateStation() {
 			(function () {
 				// use function() scope to store the local variable station_key value
 				var station_key = data[i].key;
-				mongo.updateDb('station', {key: data[i].key}, data[i], function() {
+				mongo.updateDb('station', {key: data[i].key}, data[i], false, function() {
 					console.log('station ' + station_key + ' updated. Remaining: ' + (data.length - (++updated)));
 					if(updated === data.length) {
 						console.log('all done !');
