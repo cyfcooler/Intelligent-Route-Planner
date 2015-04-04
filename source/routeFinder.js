@@ -115,7 +115,7 @@ function processRoutes(dr, r1, r2, result_handler) {
 	// process transfer route
 	for(var i = 0; i < r1.length; i++) {
 		for(var j = 0; j < r2.length; j++) {
-			if(r1[i].train_code !== r2[j].train_code && canTransfer(r1[i], r2[j])) {
+			if(r1[i].same_trains !== r2[j].same_trains && canTransfer(r1[i], r2[j])) {
 				var wait_time = calculateMins(r1[i].end_time, r2[j].start_time),
 					seat_price1 = getRequiredSeatPrice(r1[i].seat_price),
 					seat_price2 = getRequiredSeatPrice(r2[j].seat_price);
@@ -150,8 +150,16 @@ function processRoutes(dr, r1, r2, result_handler) {
 		console.log("\nTotal query cost: " + (new Date() - start_time) + " ms");
 		mongo.closeDb();
 	} else{
-		queryTicket(result, function(all_tickets){
-			typeof result_handler === 'function' && result_handler(result, all_tickets);
+		queryTicket(result, function(all_solutions){
+			/* 
+				format of one solution should be like
+				{
+					route:  {} // route info
+					ticket: {} // ticket info
+					min_price: // dynamic actual min price
+				}
+			*/
+			typeof result_handler === 'function' && result_handler(all_solutions);
 			console.log("\nTotal query cost: " + (new Date() - start_time) + " ms");
 			mongo.closeDb();
 		});
@@ -222,42 +230,38 @@ function pushAsBackup(solution) {
 }
 
 function compareBackupSolution(solution1, solution2) {
-	// if solution1 is "less" than solution2, then return true
+	// if solution1 is better than solution2, then return true
 	return solution1.min_price < solution2.min_price || (solution1.min_price === solution2.min_price && solution1.route.total_duration < solution2.route.total_duration);
 }
 
 function queryTicket(routes, callback) {
 	var current_index = 0;
-	var all_tickets = [];
+	var all_solutions = [];
 	logMessage("[queryTicket] start to query maximum " + max_solutions + " solutions");
-	var cb = function(result){
+	var cb = function(solution){
 		/* 
-			format of result should be like
-			[
-				[
-					ticket_info_1, (definition of this data structure can be found in the comment inside queryTicketRecur().)
-					ticket_info_2
-				]
-				or
-				[
-					ticket_info
-				]
-			]
+			format of solution should be like
+			{
+				route:  {} // route info
+				ticket: {} // ticket info
+				min_price: // dynamic actual min price
+			}
 		*/
-		if(result.length !== 0) {
-			all_tickets.push(result);
+		if(solution != null) {
+			all_solutions.push(solution);
 			++current_index;
-			logMessage("[queryTicket] find available solution " + current_index + ": " + JSON.stringify(result));
+			logMessage("[queryTicket] find available solution " + current_index + ": " + JSON.stringify(solution));
 		}
 		
-		if(result.length === 0 || current_index >= max_solutions) {
-			//result.length === 0 means all candidate routes have been searched.
+		if(solution == null || current_index >= max_solutions) {
+			//solution == null means all candidate solutions have been searched.
 			for(var i = 0; i < (max_solutions - current_index) && i < backup_solutions.length; i++) {
-				// if solution number doesn't reach to max_solutions, and backup_solutions has remained solutions, then add them to the final result
-				all_tickets.push(backup_solutions[i].ticket);
+				// if solution number doesn't reach to max_solutions, and backup_solutions has remained solutions, then add them to the final solution
+				logMessage("[queryTicket] find available solution " + (i + current_index + 1) + " from backup solutions: " + JSON.stringify(backup_solutions[i]));
+				all_solutions.push(backup_solutions[i]);
 			}
-			logMessage("[queryTicket] all query done. find total " + all_tickets.length + " solutions.", true);
-			typeof callback === 'function' && callback.call(this, all_tickets);
+			logMessage("[queryTicket] all query done. find total " + all_solutions.length + " solutions.", true);
+			typeof callback === 'function' && callback.call(this, all_solutions);
 		} else {
 			queryTicketRecur(current_index, routes, cb);
 		}
@@ -297,13 +301,13 @@ function queryTicketRecur(i, routes, callback) {
 			// all ticket data coming. do next step
 			if(success) {
 				// get the ticket for current route
+				var current_solution = {};
+				current_solution.route = routes[i];
+				current_solution.ticket = route_tickets;
+				current_solution.min_price = actual_min_price;
+				
 				if(preference === "price") {
 					// if price preference is selected, then need special treatment.
-					var current_solution = {};
-					current_solution.route = routes[i];
-					current_solution.ticket = route_tickets;
-					current_solution.min_price = actual_min_price;
-					
 					if(actual_min_price !== routes[i].min_price) {
 						// if min_price doesn't keep same as original, then backup this solution, and query next ticket
 						logMessage("[queryTicketRecur] min_price changed, will store it as backup solution !");
@@ -315,19 +319,19 @@ function queryTicketRecur(i, routes, callback) {
 						queryTicketRecur(i, routes, callback);
 					} else {
 						if(backup_solutions.length > 0 && compareBackupSolution(backup_solutions[0], current_solution)){
-							// if backup_solutions[0] is "less" than current solution, then get backup_solutions[0] as result, and update related record
-							logMessage("[queryTicketRecur] backup solution is less than current solution, will return backup solution !");
+							// if backup_solutions[0] is better than current solution, then get backup_solutions[0] as result, and update related record
+							logMessage("[queryTicketRecur] backup solution is better than current solution, will return backup solution !");
 							logMessage("[queryTicketRecur] backup: " + JSON.stringify(backup_solutions[0]));
 							logMessage("[queryTicketRecur] current: " + JSON.stringify(current_solution));
 							routes.splice(i, 1, backup_solutions[0].route);
-							route_tickets = backup_solutions[0].ticket;
-							backup_solutions.shift();
-							pushAsBackup(current_solution);
+							var previous_solution = current_solution;
+							current_solution = backup_solutions.shift().ticket;
+							pushAsBackup(previous_solution);
 						}
-						typeof callback === 'function' && callback.call(this, route_tickets);
+						typeof callback === 'function' && callback.call(this, current_solution);
 					}
 				} else {
-					typeof callback === 'function' && callback.call(this, route_tickets);
+					typeof callback === 'function' && callback.call(this, current_solution);
 				}
 			} else {
 				// no ticket for current route. query next route
@@ -350,7 +354,7 @@ function queryTicketRecur(i, routes, callback) {
 			queryTicketInternal(date, routes[i].start, routes[i].end, routes[i].train_code, routes[i].seat_price, 0, cb);
 		}
 	} else {
-		typeof callback === 'function' && callback.call(this, route_tickets);
+		typeof callback === 'function' && callback.call(this, null);
 	}
 }
  

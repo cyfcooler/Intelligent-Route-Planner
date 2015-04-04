@@ -7,7 +7,12 @@ var station_station_map = {};
 var duplicated = 0,
 	missing = 0;
 	
+var args = process.argv.splice(2),
+	fix = args[0];
+	
 function checkStationStation(){
+	fix = fix === 'true';
+	
 	mongo.findAll('train', function(key, all_trains) {
 		console.log('get all train done, total: ' + all_trains.length);
 		mongo.findAll('station_station', function(key, data){
@@ -21,7 +26,9 @@ function checkStationStation(){
 					station_station_map[key]._id = 0;
 					station_station._id = 0;
 					assert.equal(JSON.stringify(station_station_map[key]), JSON.stringify(station_station));
-					//mongo.removeOne('station_station', {train_code: station_station.train_code, edge: station_station.edge});
+					if(fix) {
+						mongo.removeOne('station_station', {train_code: station_station.train_code, edge: station_station.edge});
+					}
 				}
 				station_station_map[key] = station_station;
 			});
@@ -49,7 +56,9 @@ function checkStationStation(){
 			
 			console.log('station station length: expected: ' + count + ', actual: ' + data.length);
 			console.log('All check done ! duplicated: ' + duplicated + ', missing: ' + missing);
-			mongo.closeDb();
+			if(!fix) {
+				mongo.closeDb();
+			}
 		});
 	});
 }

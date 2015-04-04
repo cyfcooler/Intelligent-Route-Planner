@@ -5,13 +5,23 @@ var routeFinder = require('./routeFinder.js'),
 	
 var seat_num_code = Object.keys(seat.num_code2name);
 
-function printRoutes(routes, tickets) {
-	for(var i = 0; i < tickets.length; i++){
+/* 
+	format of solution should be like
+	{
+		route:  {} // route info
+		ticket: {} // ticket info
+		min_price: // dynamic actual min price
+	}
+*/
+function printRoutes(solutions) {
+	for(var i = 0; i < solutions.length; i++){
 		console.log('\nSolution ' + (i + 1) + ':');
-		if(routes[i].transfer != null) {
-			printTranserRoute(routes[i], tickets[i]);
+		var route = solutions[i].route,
+			ticket = solutions[i].ticket;
+		if(route.transfer != null) {
+			printTranserRoute(route, ticket);
 		} else {
-			printDirectRoute(routes[i], tickets[i]);
+			printDirectRoute(route, ticket);
 		}
 	}
 }

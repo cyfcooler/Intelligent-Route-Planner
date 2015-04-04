@@ -13,7 +13,7 @@ var args = process.argv.splice(2),
 	code = args[0],
 	start = args[1] || 0,
 	end = args[2],
-	frequency = args[3] || 50,
+	frequency = args[3] || 40,
 	date = args[4] || '2015-04-10',
 	async = args[5];
 	
@@ -23,35 +23,42 @@ var train_index,
 	special_seat_file = '../log/message/specialSeat.log',
 	seat_price_code = Object.keys(seat.price_code2name_2);
 
-var station_station_map = {};
+var station_station_map = {},
+	station_map = {};
 function processAllTrains(){
 	async = async === 'false' ? false : true;
-	mongo.findAll('train', function(key, data) {
-		all_trains = data;
-		end = end || (data.length - 1);
-		console.log('get all train done, total: ' + data.length);
-		console.log('process train from index ' + start + ' to index ' + end);
-		mongo.findAll('station_station', function(key, data){
-			console.log('get all station_station done. total: ' + data.length);
-			data.forEach(function(station_station){
-				var key = station_station.train_code + ':' + station_station.edge;
-				station_station_map[key] = station_station;
+	mongo.findAll('station', function(key, stations){
+		console.log('get all station done, total: ' + stations.length);
+		stations.forEach(function(station_info){
+			station_map[station_info.key] = station_info.value.data.sameStations;
+		});
+		mongo.findAll('train', function(key, data) {
+			all_trains = data;
+			end = end || (data.length - 1);
+			console.log('get all train done, total: ' + data.length);
+			console.log('process train from index ' + start + ' to index ' + end);
+			mongo.findAll('station_station', function(key, data){
+				console.log('get all station_station done. total: ' + data.length);
+				data.forEach(function(station_station){
+					var key = station_station.train_code + ':' + station_station.edge;
+					station_station_map[key] = station_station;
+				});
+				train_index = start;
+				if(async) {
+					var i = train_index - 1;
+					console.log('frequency: ' + frequency + ' ms');
+					var interval = setInterval(function(){
+						if(++i > end) {
+							clearInterval(interval);
+							console.log('send request done !');
+						} else {
+							processTrain(all_trains[i]);
+						}
+					}, frequency);
+				} else {
+					processTrain(all_trains[train_index]);
+				}
 			});
-			train_index = start;
-			if(async) {
-				var i = train_index - 1;
-				console.log('frequency: ' + frequency + ' ms');
-				var interval = setInterval(function(){
-					if(++i > end) {
-						clearInterval(interval);
-						console.log('send request done !');
-					} else {
-						processTrain(all_trains[i]);
-					}
-				}, frequency);
-			} else {
-				processTrain(all_trains[train_index]);
-			}
 		});
 	});
 }
@@ -126,7 +133,7 @@ function queryTicketPrice(from_station_code, to_station_code, cb) {
 	if(seat_price_cache[key] == null) {
 		var url = 'https://kyfw.12306.cn/otn/leftTicketPrice/query?leftTicketDTO.train_date=' + date + '&leftTicketDTO.from_station=' + from_station_code + '&leftTicketDTO.to_station=' + to_station_code + '&purpose_codes=ADULT&randCode=' + code;
 		https.getHttpsData(url, key, {
-			Cookie: '__NRF=C80D2A08614D1C32FED3C2D5D2417BF9; JSESSIONID=0A02F012C49FE1E64D3B10EBAD33F0C86CFB3FB6DF; _jc_save_zwdch_fromStation=%u5317%u4EAC%2CBJP; _jc_save_zwdch_cxlx=1; BIGipServerotn=317719050.50210.0000; _jc_save_czxxcx_toStation=%u5F90%u5DDE%2CXCH; _jc_save_czxxcx_fromDate=2015-05-05; current_captcha_type=C; _jc_save_fromStation=%u5F90%u5DDE%2CXCH; _jc_save_toStation=%u8FDE%u4E91%u6E2F%u4E1C%2CUKH; _jc_save_fromDate=2015-04-10; _jc_save_toDate=; _jc_save_wfdc_flag=dc'
+			Cookie: '__NRF=DC5676E16982C2260A68B8FB1E1F6443; JSESSIONID=0A02F033C44C280B4AA5857369E74C523AF6B9A152; _jc_save_zwdch_fromStation=%u5317%u4EAC%2CBJP; _jc_save_zwdch_cxlx=1; _jc_save_czxxcx_toStation=%u5F90%u5DDE%2CXCH; _jc_save_czxxcx_fromDate=2015-05-05; BIGipServerotn=871367178.50210.0000; current_captcha_type=C; _jc_save_fromStation=%u5357%u901A%2CNUH; _jc_save_toStation=%u5170%u6EAA%2CLWH; _jc_save_fromDate=2015-04-10; _jc_save_toDate=; _jc_save_wfdc_flag=dc'
 		}, function(key, msg) {
 			try {
 				msg = JSON.parse(msg);
@@ -193,6 +200,8 @@ function insertIntoDb(train_code, same_trains, from_station, to_station, seat_pr
 		end: to,
 		edge: from + '_' + to,
 		train_code: train_code,
+		start_same_stations: station_map[from],
+		end_same_stations: station_map[to],
 		same_trains: same_trains,
 		start_time: from_station.start_time,
 		end_time: to_station.arrive_time,
