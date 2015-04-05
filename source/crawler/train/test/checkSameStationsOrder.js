@@ -1,6 +1,6 @@
 // this file is to check the order of sameStations is same across all same stations
 
-var mongo = require('../lib/mongo.js');
+var mongo = require('../../../lib/mongo.js');
 
 /*
 	key: ""

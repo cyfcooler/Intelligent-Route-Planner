@@ -1,4 +1,4 @@
-var mongo = require('../lib/mongo.js'),
+var mongo = require('../../../lib/mongo.js'),
 	station = require('../data/station.js'),
 	assert = require('assert');
 	

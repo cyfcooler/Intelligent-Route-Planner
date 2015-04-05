@@ -1,6 +1,6 @@
 // add sameTrains field in train table
 
-var mongo = require('./lib/mongo.js');
+var mongo = require('../../lib/mongo.js');
 
 var remaining;
 

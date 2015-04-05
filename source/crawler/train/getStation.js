@@ -1,6 +1,6 @@
-var https = require('./lib/clientget.js'),
-	mongo = require('./lib/mongo.js'),
-	utility = require('./lib/utility.js'),
+var https = require('../../lib/clientget.js'),
+	mongo = require('../../lib/mongo.js'),
+	utility = require('../../lib/utility.js'),
 	station = require('./data/station.js');
 
 var args = process.argv.splice(2),

@@ -1,6 +1,6 @@
 // this file is to check there is no station contains empty same stations in station_station table, or if exists, fix it
 
-var mongo = require('../lib/mongo.js'),
+var mongo = require('../../../lib/mongo.js'),
 	assert = require('assert');
 	
 var args = process.argv.splice(2),

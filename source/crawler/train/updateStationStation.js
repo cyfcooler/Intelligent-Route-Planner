@@ -1,6 +1,6 @@
 // add start_same_stations and end_same_stations field in station_station table
 
-var mongo = require('./lib/mongo.js');
+var mongo = require('../../lib/mongo.js');
 
 var args = process.argv.splice(2),
 	start = args[0] || 0,

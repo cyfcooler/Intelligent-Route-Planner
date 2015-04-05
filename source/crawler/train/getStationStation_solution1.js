@@ -1,9 +1,9 @@
 // Solution 1:
 // use this entry point https://kyfw.12306.cn/otn/leftTicket/queryTicketPrice?train_no=240000G10108&from_station_no=01&to_station_no=10&seat_types=OM9&train_date=2015-04-01 to get price data, but it seems this entry point has flow rate control (will return 403 if send request too frequently)
 
-var mongo = require('./lib/mongo.js'),
-	utility = require('./lib/utility.js'),
-	https = require('./lib/clientget.js'),
+var mongo = require('../../lib/mongo.js'),
+	utility = require('../../lib/utility.js'),
+	https = require('../../lib/clientget.js'),
 	seat = require('./data/seat.js'),
 	station = require('./data/station.js'),
 	assert = require('assert');

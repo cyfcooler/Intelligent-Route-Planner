@@ -2,9 +2,9 @@
 // use this entry point https://kyfw.12306.cn/otn/leftTicketPrice/query?leftTicketDTO.train_date=2015-04-01&leftTicketDTO.from_station=BJP&leftTicketDTO.to_station=SHH&purpose_codes=ADULT&randCode=4wnz to get price data
 // load all data into memory and build hash_map for optimization
 
-var mongo = require('./lib/mongo.js'),
-	utility = require('./lib/utility.js'),
-	https = require('./lib/clientget.js'),
+var mongo = require('../../lib/mongo.js'),
+	utility = require('../../lib/utility.js'),
+	https = require('../../lib/clientget.js'),
 	seat = require('./data/seat.js'),
 	station = require('./data/station.js'),
 	assert = require('assert');

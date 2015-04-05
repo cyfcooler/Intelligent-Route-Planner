@@ -1,8 +1,8 @@
 // get train from train_list.js
 
-var https = require('./lib/clientget.js'),
-	mongo = require('./lib/mongo.js'),
-	utility = require('./lib/utility.js'),
+var https = require('../../lib/clientget.js'),
+	mongo = require('../../lib/mongo.js'),
+	utility = require('../../lib/utility.js'),
 	train = require('./data/train_list.js'),
 	station = require('./data/station.js');
 

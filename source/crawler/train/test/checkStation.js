@@ -1,7 +1,7 @@
 // check the zero-train station, sameStations field, and the redundant or missing station from station.js
 
 var assert = require('assert'),
-	mongo = require('../lib/mongo.js'),
+	mongo = require('../../../lib/mongo.js'),
 	stations = require('../data/station.js'),
 	station_codes = Object.keys(stations.code2name);
 	

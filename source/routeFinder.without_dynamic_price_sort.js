@@ -1,8 +1,8 @@
 var https = require('./lib/clientget.js'),
 	mongo = require('./lib/mongo.js'),
 	utility = require('./lib/utility.js'),
-	station = require('./data/station.js'),
-	seat = require('./data/seat.js'),
+	station = require('./crawler/train/data/station.js'),
+	seat = require('./crawler/train/data/seat.js'),
 	assert = require('assert');
 	
 var error_file = '../log/error/main.err',

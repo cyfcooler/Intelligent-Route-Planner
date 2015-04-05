@@ -1,5 +1,5 @@
-var mongo = require('./lib/mongo.js'),
-	utility = require('./lib/utility.js'),
+var mongo = require('../../lib/mongo.js'),
+	utility = require('../../lib/utility.js'),
 	station = require('./data/station.js');
 
 /*

@@ -1,7 +1,7 @@
 // first stage: check redundant or missing from train_list
 // second stage: check all trains in train table has 0 stations or not, and check status of sameTrains field.
 
-var mongo = require('../lib/mongo.js'),
+var mongo = require('../../../lib/mongo.js'),
 	trains = require('../data/train_list.js');
 	
 var args = process.argv.splice(2),

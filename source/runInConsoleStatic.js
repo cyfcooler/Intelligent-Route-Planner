@@ -1,7 +1,7 @@
 var routeFinder = require('./routeFinder.js'),
 	utility = require('./lib/utility.js'),
-	station = require('./data/station.js'),
-	seat = require('./data/seat.js');
+	station = require('./crawler/train/data/station.js'),
+	seat = require('./crawler/train/data/seat.js');
 	
 var seat_num_code = Object.keys(seat.num_code2name);
 
