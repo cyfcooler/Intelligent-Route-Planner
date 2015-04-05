@@ -1,5 +1,35 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+
+    // Wrapper
+    #wrapper
+
+        // TRAIN INFO
+        #train_info
+
+        h2 Query Train
+        #query_train
+            fieldset
+                input#inputDate(type='text', placeholder='Date', value='2015-04-10')
+                input#inputFrom(type='text', placeholder='From', value='BJP')
+                input#inputTo(type='text', placeholder='To', value='JBH')
+                br
+                input#inputMinWaitTime(type='text', placeholder='MinWaitTime', value='30')
+                input#inputMaxWaitTime(type='text', placeholder='MaxWaitTime', value='90')
+                br
+                input#inputPreference(type='text', placeholder='Preference', value='price')
+                input#inputMaxSolutions(type='text', placeholder='MaxSolutions')
+                br
+                input#inputSameStationTransfer(type='text', placeholder='SameStationTransfer')
+                input#inputMaxDuration(type='text', placeholder='MaxDuration')
+                br
+                input#inputMaxPrice(type='text', placeholder='MaxPrice')
+                input#inputStartTimeRange(type='text', placeholder='StartTimeRange')
+                br
+                input#inputEndTimeRange(type='text', placeholder='EndTimeRange')
+                input#inputRequiredSeatNumber(type='text', placeholder='RequiredSeatNumber')
+                br
+                button#btnQueryTrain Query Train
+
+    // /WRAPPER
