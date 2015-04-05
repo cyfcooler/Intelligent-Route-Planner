@@ -1,0 +1,2 @@
+Process:
+getStation.js -> updateStation.js -> checkStation.js -> checkSameStationsOrder.js -> getTrain.js -> updateTrain.js -> checkTrain.js -> getStationStation.js -> checkStationStation.js -> updateStationStation.js -> checkEmptySameStations.js
