@@ -1,5 +1,8 @@
-var mongo = require('../../../lib/mongo.js'),
-	station = require('./data/station.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js')),
+	station = require(pathHelper.getDataFile('station.js'));
 
 var station_station_map = {};
 function calculateCombinations(){

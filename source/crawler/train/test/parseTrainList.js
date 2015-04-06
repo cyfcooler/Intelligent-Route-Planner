@@ -1,9 +1,12 @@
 // parse the train_list and generate the MD5 to ensure the train schedule is not changed.
 
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../../..', 'lib/pathHelper.js'));
+
 var args = process.argv.splice(2),
 	date = args[0];
 
-var train = require('../data/train_list_' + date + '.js'),
+var train = require(pathHelper.getDataFile('train_list_' + date + '.js')),
 	md5 = require('MD5');
 
 function calculateLength(train_list) {

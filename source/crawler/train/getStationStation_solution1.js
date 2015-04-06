@@ -1,11 +1,14 @@
 // Solution 1:
 // use this entry point https://kyfw.12306.cn/otn/leftTicket/queryTicketPrice?train_no=240000G10108&from_station_no=01&to_station_no=10&seat_types=OM9&train_date=2015-04-01 to get price data, but it seems this entry point has flow rate control (will return 403 if send request too frequently)
 
-var mongo = require('../../lib/mongo.js'),
-	utility = require('../../lib/utility.js'),
-	https = require('../../lib/clientget.js'),
-	seat = require('./data/seat.js'),
-	station = require('./data/station.js'),
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	https = require(pathHelper.getLibFile('clientget.js')),
+	seat = require(pathHelper.getDataFile('seat.js')),
+	station = require(pathHelper.getDataFile('station.js')),
 	assert = require('assert');
 
 var args = process.argv.splice(2),
@@ -15,7 +18,7 @@ var args = process.argv.splice(2),
 var train_index,
 	len,
 	all_trains,
-	file = '../log/error/getStationStation.err',
+	error_file = pathHelper.getLogErrorFile('getStationStation_solution1.err'),
 	seat_price_code = Object.keys(seat.price_code2name);
 
 function processAllTrains(){
@@ -191,7 +194,7 @@ function calculateMins(start, end, day_diff) {
 }
 
 function logError(msg) {
-	utility.logError(file, msg, "getStationStation");
+	utility.logError(error_file, msg, "getStationStation");
 }
 
 function checkEndingStatus() {

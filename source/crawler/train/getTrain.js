@@ -1,10 +1,13 @@
 // get train from train_list.js
 
-var https = require('../../lib/clientget.js'),
-	mongo = require('../../lib/mongo.js'),
-	utility = require('../../lib/utility.js'),
-	train = require('./data/train_list.js'),
-	station = require('./data/station.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	https = require(pathHelper.getLibFile('clientget.js')),
+	train = require(pathHelper.getDataFile('train_list.js')),
+	station = require(pathHelper.getDataFile('station.js'));
 
 var args = process.argv.splice(2),
 	code = args[0],
@@ -13,7 +16,7 @@ var args = process.argv.splice(2),
 	end = args[3],
 	frequency = args[4] || 50;
 
-var file = '../log/error/getTrain_new.err',
+var file = pathHelper.getLogErrorFile('getTrain.err'),
 	remaining;
 	
 function getAllTrainsInOneDay(train_list, date) {

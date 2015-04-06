@@ -1,6 +1,9 @@
-var MongoClient = require('C:\\Users\\yifche\\node_modules\\mongodb').MongoClient,
-	utility = require('./utility.js'),
-	file = '../log/error/mongoerror.err',
+var pathHelper = require('./pathHelper.js');
+
+var MongoClient = require('mongodb').MongoClient,
+	utility = require(pathHelper.getLibFile('utility.js'));
+
+var error_file = pathHelper.getLogErrorFile('mongoerror.err'),
 	dbs;
 
 function addData(table, key, data, cb) {
@@ -75,7 +78,7 @@ function find(table, key, cb, args) {
 }
 
 function logError(msg) {
-	utility.logError(file, msg, "mongo");
+	utility.logError(error_file, msg, "mongo");
 }
 
 exports.insertDb = function(table, key, data, cb) {

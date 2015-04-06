@@ -1,4 +1,6 @@
-var routeFinder = require('./routeFinder.js');
+var pathHelper = require(__dirname + '/lib/pathHelper.js');
+
+var routeFinder = require(pathHelper.getRootFile('routeFinder.js'));
 
 var callback;
 

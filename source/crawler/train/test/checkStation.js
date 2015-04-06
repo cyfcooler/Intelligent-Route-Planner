@@ -1,8 +1,11 @@
 // check the zero-train station, sameStations field, and the redundant or missing station from station.js
 
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../../..', 'lib/pathHelper.js'));
+
 var assert = require('assert'),
-	mongo = require('../../../lib/mongo.js'),
-	stations = require('../data/station.js'),
+	mongo = require(pathHelper.getLibFile('mongo.js')),
+	stations = require(pathHelper.getDataFile('station.js')),
 	station_codes = Object.keys(stations.code2name);
 	
 /*

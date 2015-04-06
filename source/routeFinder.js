@@ -1,12 +1,14 @@
-var https = require('./lib/clientget.js'),
-	mongo = require('./lib/mongo.js'),
-	utility = require('./lib/utility.js'),
-	station = require('./crawler/train/data/station.js'),
-	seat = require('./crawler/train/data/seat.js'),
+var pathHelper = require(__dirname + '/lib/pathHelper.js');
+
+var https = require(pathHelper.getLibFile('clientget.js')),
+	mongo = require(pathHelper.getLibFile('mongo.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	station = require(pathHelper.getDataFile('station.js')),
+	seat = require(pathHelper.getDataFile('seat.js')),
 	assert = require('assert');
 	
-var error_file = '../log/error/routeFinder.err',
-	log_file = '../log/message/routeFinder.log';
+var error_file = pathHelper.getLogErrorFile('routeFinder.err'),
+	log_file = pathHelper.getLogMessageFile('routeFinder.log');
 
 var seat_num_code = Object.keys(seat.num_code2name),
 	start_time = new Date(),

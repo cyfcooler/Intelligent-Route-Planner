@@ -1,6 +1,9 @@
 // add start_same_stations and end_same_stations field in station_station table
 
-var mongo = require('../../lib/mongo.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js'));
 
 var args = process.argv.splice(2),
 	start = args[0] || 0,

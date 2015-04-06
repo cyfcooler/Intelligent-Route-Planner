@@ -1,7 +1,10 @@
-var https = require('../../lib/clientget.js'),
-	mongo = require('../../lib/mongo.js'),
-	utility = require('../../lib/utility.js'),
-	station = require('./data/station.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var https = require(pathHelper.getLibFile('clientget.js')),
+	mongo = require(pathHelper.getLibFile('mongo.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	station = require(pathHelper.getDataFile('station.js'));
 
 var args = process.argv.splice(2),
 	code = args[0],
@@ -18,7 +21,7 @@ var start = (start || 0),
 	len = station_names.length,
 	end = (end || (len - 1)),
 	remaining = end - start + 1,
-	file = '../log/error/getStation.err',
+	file = pathHelper.getLogErrorFile('getStation.err'),
 	frequency = (frequency || 100);
 
 // 获取站点的车次信息使用12306出行向导 车站车次查询接口，需验证码，验证码有效时间5分钟，暂时命令行参数输入

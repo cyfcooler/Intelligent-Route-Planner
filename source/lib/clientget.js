@@ -1,12 +1,14 @@
+var pathHelper = require('./pathHelper.js');
+
 var url = require('url'),
 	https = require('https'),
-	utility = require('./utility.js');
+	utility = require(pathHelper.getLibFile('utility.js'));
 
 var options = {},
-	file = '../log/error/httpserror.err';
+	error_file = pathHelper.getLogErrorFile('httpserror.err');
 
 function logError(msg) {
-	utility.logError(file, msg, "https");
+	utility.logError(error_file, msg, "https");
 }
 
 exports.getHttpsData = function(uri, key, headers, cb, error_cb) {

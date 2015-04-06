@@ -1,6 +1,9 @@
 // this file is to check the order of sameStations is same across all same stations
 
-var mongo = require('../../../lib/mongo.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js'));
 
 /*
 	key: ""

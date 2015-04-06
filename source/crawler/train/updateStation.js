@@ -1,6 +1,9 @@
-var mongo = require('../../lib/mongo.js'),
-	utility = require('../../lib/utility.js'),
-	station = require('./data/station.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	station = require(pathHelper.getDataFile('station.js'));
 
 /*
 	key: "",

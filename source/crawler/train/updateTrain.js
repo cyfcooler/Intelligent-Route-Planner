@@ -1,6 +1,9 @@
 // add sameTrains field in train table
 
-var mongo = require('../../lib/mongo.js');
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js'));
 
 var remaining;
 

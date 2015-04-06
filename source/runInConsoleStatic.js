@@ -1,7 +1,9 @@
-var routeFinder = require('./routeFinder.js'),
-	utility = require('./lib/utility.js'),
-	station = require('./crawler/train/data/station.js'),
-	seat = require('./crawler/train/data/seat.js');
+var pathHelper = require(__dirname + '/lib/pathHelper.js');
+
+var routeFinder = require(pathHelper.getRootFile('routeFinder.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	station = require(pathHelper.getDataFile('station.js')),
+	seat = require(pathHelper.getDataFile('seat.js'));
 	
 var seat_num_code = Object.keys(seat.num_code2name);
 

@@ -2,11 +2,14 @@
 // use this entry point https://kyfw.12306.cn/otn/leftTicketPrice/query?leftTicketDTO.train_date=2015-04-01&leftTicketDTO.from_station=BJP&leftTicketDTO.to_station=SHH&purpose_codes=ADULT&randCode=4wnz to get price data
 // load all data into memory and build hash_map for optimization
 
-var mongo = require('../../lib/mongo.js'),
-	utility = require('../../lib/utility.js'),
-	https = require('../../lib/clientget.js'),
-	seat = require('./data/seat.js'),
-	station = require('./data/station.js'),
+var path = require('path');
+var pathHelper = require(path.resolve(__dirname, '../..', 'lib/pathHelper.js'));
+
+var mongo = require(pathHelper.getLibFile('mongo.js')),
+	utility = require(pathHelper.getLibFile('utility.js')),
+	https = require(pathHelper.getLibFile('clientget.js')),
+	seat = require(pathHelper.getDataFile('seat.js')),
+	station = require(pathHelper.getDataFile('station.js')),
 	assert = require('assert');
 
 var args = process.argv.splice(2),
@@ -19,8 +22,8 @@ var args = process.argv.splice(2),
 	
 var train_index,
 	all_trains,
-	file = '../log/error/getStationStation.err',
-	special_seat_file = '../log/message/specialSeat.log',
+	error_file = pathHelper.getLogErrorFile('getStationStation.err'),
+	special_seat_file = pathHelper.getLogMessageFile('specialSeat.log'),
 	seat_price_code = Object.keys(seat.price_code2name_2);
 
 var station_station_map = {},
@@ -249,7 +252,7 @@ function calculateMins(start, end, day_diff) {
 }
 
 function logError(msg) {
-	utility.logError(file, "train_index: " + train_index + ", " + msg, "getStationStation");
+	utility.logError(error_file, "train_index: " + train_index + ", " + msg, "getStationStation");
 }
 
 function logSpecialSeat(msg) {
