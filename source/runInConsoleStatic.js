@@ -60,7 +60,54 @@ function generateTicketInfoString(all_seat_price) {
 	return str;
 }
 
+function setField(obj, field, value) {
+	if(value != null && (typeof value !== 'number' || !isNaN(value))) {
+		obj[field] = value;
+	}
+}
+
+function checkAndConvertArgs(args) {
+	var ret = {};
+	
+	if(args.length < 4) {
+		console.log('please provide arguments in following order:')
+		console.log('required: [date] [from] [to] [preference]');
+		console.log('optional: [max_solutions] [consider_transfer] [min_wait_time] [max_wait_time] [same_station_transfer] [max_duration] [max_price] [start_time_range] [end_time_range] [required_seat_type] [required_ticket_num]');
+		return ret;
+	}
+	
+	setField(ret, 'date', args[0]);
+	setField(ret, 'from', args[1]);
+	setField(ret, 'to', args[2]);
+	setField(ret, 'order_by', args[3]);
+	setField(ret, 'max_solutions', parseInt(args[4]));
+	setField(ret, 'consider_transfer', args[5] != null ? args[5] === 'true' : args[5]);
+	setField(ret, 'min_wait_time', parseInt(args[6]));
+	setField(ret, 'max_wait_time', parseInt(args[7]));
+	setField(ret, 'same_station_transfer', args[8] != null ? args[8] === 'true' : args[8]);
+	setField(ret, 'max_duration', parseInt(args[9]));
+	setField(ret, 'max_price', parseInt(args[10]));
+	setField(ret, 'start_time_range', args[11] != null ? JSON.parse(args[11]) : args[11]);
+	setField(ret, 'end_time_range', args[12] != null ? JSON.parse(args[12]) : args[12]);
+	setField(ret, 'seat_type', args[13] != null ? JSON.parse(args[13]) : args[13]);
+	setField(ret, 'ticket_num', parseInt(args[14]));
+	
+	return ret;
+}
+
+function errorHandler(msg) {
+	console.log('run failed: ' + msg);
+}
+
+function run(args, result_handler, error_handler) {
+	var input_param = checkAndConvertArgs(args)
+	
+	if(Object.keys(input_param).length > 0){
+		routeFinder.run(input_param, true /* static_run */, result_handler, error_handler);
+	}
+}
+
 var args = process.argv.splice(2),
 	date = args[0];
-
-routeFinder.run(args, true /* static_run */, printCandidateRoutes);
+	
+run(args, printCandidateRoutes, errorHandler);

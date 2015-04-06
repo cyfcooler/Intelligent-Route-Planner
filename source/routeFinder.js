@@ -12,56 +12,149 @@ var error_file = pathHelper.getLogErrorFile('routeFinder.err'),
 
 var seat_num_code = Object.keys(seat.num_code2name),
 	start_time = new Date(),
-	same_station_map = {};
+	same_station_map = {},
+	static_run;
 
-function findAllRoutes(result_handler) {
-	var remaining = 2;
-	
-	if(from != null && to != null && station.code2name[from] != null && station.code2name[to] != null) {
-		mongo.findOne('station', from, function(key, data){
-			same_station_map[key] = data.value.data.sameStations;
-			if(--remaining === 0) {
-				findFeasibleRoutes(from, to, result_handler);
-			}
-		});
-		
-		mongo.findOne('station', to, function(key, data){
-			same_station_map[key] = data.value.data.sameStations;
-			if(--remaining === 0) {
-				findFeasibleRoutes(from, to, result_handler);
-			}
-		});
-	} else {
-		console.log('please input 2 valid stations !');
-	}
+var default_values = {
+	consider_transfer: true,
+	min_wait_time: 60,
+	max_wait_time: 120,
+	same_station_transfer: false,
+	start_time_range: [0,24],
+	end_time_range: [0,24],
+	seat_type: [1,1,1,1,1,1,1,1,1,1,1],
+	ticket_num: 1,
+	max_solutions: 10,
+	max_duration: Infinity,
+	max_price: Infinity
 }
 
-function findFeasibleRoutes(from, to, result_handler) {
+function checkRequiredFieldsType(input_param) {
+	return checkRequiredFieldType(input_param, "date", "string")
+		&& checkRequiredFieldType(input_param, "from", "string")
+		&& checkRequiredFieldType(input_param, "to", "string")
+		&& checkRequiredFieldType(input_param, "order_by", "string");
+}
+
+function checkRequiredFieldType(input_param, field, type) {
+	return input_param[field] != null && typeof input_param[field] === type;
+}
+
+function checkOptionalFieldsType(input_param) {
+	return checkOptionalFieldType(input_param, "consider_transfer", "boolean")
+		&& checkOptionalFieldType(input_param, "min_wait_time", "number")
+		&& checkOptionalFieldType(input_param, "max_wait_time", "number")
+		&& checkOptionalFieldType(input_param, "same_station_transfer", "boolean")
+		&& checkOptionalFieldType(input_param, "start_time_range", Array)
+		&& checkOptionalFieldType(input_param, "end_time_range", Array)
+		&& checkOptionalFieldType(input_param, "seat_type", Array)
+		&& checkOptionalFieldType(input_param, "ticket_num", "number")
+		&& checkOptionalFieldType(input_param, "max_solutions", "number")
+		&& checkOptionalFieldType(input_param, "max_duration", "number")
+		&& checkOptionalFieldType(input_param, "max_price", "number");
+}
+
+function checkOptionalFieldType(input_param, field, type) {
+	if(input_param[field] == null) {
+		input_param[field] = default_values[field];
+	}
+	return typeof input_param[field] === type || (typeof input_param[field] === "object" && input_param[field] instanceof type);
+}
+
+function checkTimeRange(time_range) {
+	return time_range.length === 2 && typeof time_range[0] === 'number' && typeof time_range[1] === 'number' && time_range[0] <= time_range[1] && time_range[0] >= 0 && time_range[0] <= 24 && time_range[1] >= 0 && time_range[1] <= 24;
+}
+
+function checkSeatType(seat_type) {
+	if(seat_type.length !== seat_num_code.length) {
+		setErrorMessage('[seat_type] should be length ' + seat_num_code.length);
+		return false;
+	}
+	for(var i = 0; i < seat_type.length; i++) {
+		if(typeof seat_type[i] !== 'number') {
+			setErrorMessage('all data in [seat_type] should be of type number');
+			return false;
+		}
+	}
+	return true;
+}
+
+function check(input_param) {
+	// check field type
+	if(!checkRequiredFieldsType(input_param) || !checkOptionalFieldsType(input_param)) {
+		setErrorMessage('field type error !');
+		return false;
+	}
+	
+	if(input_param.order_by !== 'time' && input_param.order_by !== 'price') {
+		setErrorMessage('[order_by] should be "time" or "price".');
+		return false;
+	}
+	
+	if(!checkTimeRange(input_param.start_time_range) || !checkTimeRange(input_param.end_time_range)){
+		setErrorMessage('format of [start_time_range] or [end_time_range] should be like [XX,YY] where XX and YY are both valid hours (0~24), and XX should <= YY');
+		return false;
+	}
+	
+	if(!checkSeatType(input_param.seat_type)) {
+		return false;
+	}
+	
+	if(station.code2name[input_param.from] == null || station.code2name[input_param.to] == null) {
+		setErrorMessage('please input 2 valid stations !');
+		return false;
+	}
+	
+	input_param.max_price *= 10;
+	return true;
+}
+
+function findAllRoutes(result_handler, error_handler) {
+	var remaining = 2;
+	
+	mongo.findOne('station', input_param.from, function(key, data){
+		same_station_map[key] = data.value.data.sameStations;
+		if(--remaining === 0) {
+			findFeasibleRoutes(input_param.from, input_param.to, result_handler, error_handler);
+		}
+	});
+	
+	mongo.findOne('station', input_param.to, function(key, data){
+		same_station_map[key] = data.value.data.sameStations;
+		if(--remaining === 0) {
+			findFeasibleRoutes(input_param.from, input_param.to, result_handler, error_handler);
+		}
+	});
+}
+
+function findFeasibleRoutes(from, to, result_handler, error_handler) {
 	var direct_routes = [],
 		routes1 = [],
 		routes2 = [],
-		remaining = 3;
+		remaining = input_param.consider_transfer ? 3 : 1;
 	
 	findDirectRoute(from, to, function(routes) {
 		direct_routes = routes;
 		if(--remaining === 0) {
-			processRoutes(direct_routes, routes1, routes2, result_handler);
+			processRoutes(direct_routes, routes1, routes2, result_handler, error_handler);
 		}
 	});
 	
-	findRoute1(from, function(routes) {
-		routes1 = routes;
-		if(--remaining === 0) {
-			processRoutes(direct_routes, routes1, routes2, result_handler);
-		}
-	});
-	
-	findRoute2(to, function(routes) {
-		routes2 = routes;
-		if(--remaining === 0) {
-			processRoutes(direct_routes, routes1, routes2, result_handler);
-		}
-	});
+	if(input_param.consider_transfer) {
+		findRoute1(from, function(routes) {
+			routes1 = routes;
+			if(--remaining === 0) {
+				processRoutes(direct_routes, routes1, routes2, result_handler, error_handler);
+			}
+		});
+		
+		findRoute2(to, function(routes) {
+			routes2 = routes;
+			if(--remaining === 0) {
+				processRoutes(direct_routes, routes1, routes2, result_handler, error_handler);
+			}
+		});
+	}
 }
 
 function findDirectRoute(from, to, cb) {
@@ -94,7 +187,7 @@ function findRoute2(to, cb) {
 	duration: "",
 	seat_price: []
  */
-function processRoutes(dr, r1, r2, result_handler) {
+function processRoutes(dr, r1, r2, result_handler, error_handler) {
 	var result = [];
 
 	// process direct route
@@ -114,43 +207,44 @@ function processRoutes(dr, r1, r2, result_handler) {
 		}
 	}
 
-	// process transfer route
-	for(var i = 0; i < r1.length; i++) {
-		for(var j = 0; j < r2.length; j++) {
-			if(r1[i].same_trains !== r2[j].same_trains && canTransfer(r1[i], r2[j])) {
-				var wait_time = calculateMins(r1[i].end_time, r2[j].start_time),
-					seat_price1 = getRequiredSeatPrice(r1[i].seat_price),
-					seat_price2 = getRequiredSeatPrice(r2[j].seat_price);
-				if(isTransferQualified(r1[i].duration, wait_time, r2[j].duration, seat_price1, seat_price2, r1[i].start_time, r2[j].end_time)) {
-					result.push({
-						start: r1[i].start,
-						end: r2[j].end,
-						transfer: [r1[i].end, r2[j].start],
-						wait_time: wait_time,
-						train_code: [r1[i].train_code, r2[j].train_code],
-						start_time: [r1[i].start_time, r2[j].start_time],
-						end_time: [r1[i].end_time, r2[j].end_time],
-						duration: [r1[i].duration, r2[j].duration],
-						total_duration: r1[i].duration + wait_time + r2[j].duration,
-						seat_price: [seat_price1, seat_price2],
-						min_price: seat_price1.min_price + seat_price2.min_price
-					});
+	if(input_param.consider_transfer) {
+		// process transfer route
+		for(var i = 0; i < r1.length; i++) {
+			for(var j = 0; j < r2.length; j++) {
+				if(r1[i].same_trains !== r2[j].same_trains && canTransfer(r1[i], r2[j])) {
+					var wait_time = calculateMins(r1[i].end_time, r2[j].start_time),
+						seat_price1 = getRequiredSeatPrice(r1[i].seat_price),
+						seat_price2 = getRequiredSeatPrice(r2[j].seat_price);
+					if(isTransferQualified(r1[i].duration, wait_time, r2[j].duration, seat_price1, seat_price2, r1[i].start_time, r2[j].end_time)) {
+						result.push({
+							start: r1[i].start,
+							end: r2[j].end,
+							transfer: [r1[i].end, r2[j].start],
+							wait_time: wait_time,
+							train_code: [r1[i].train_code, r2[j].train_code],
+							start_time: [r1[i].start_time, r2[j].start_time],
+							end_time: [r1[i].end_time, r2[j].end_time],
+							duration: [r1[i].duration, r2[j].duration],
+							total_duration: r1[i].duration + wait_time + r2[j].duration,
+							seat_price: [seat_price1, seat_price2],
+							min_price: seat_price1.min_price + seat_price2.min_price
+						});
+					}
 				}
 			}
 		}
 	}
 	
-	if(preference === "time") {
+	if(input_param.order_by === "time") {
 		result.sort(sortByDuration);
-	} else if(preference === "price") {
+	} else if(input_param.order_by === "price") {
 		result.sort(sortByPrice);
 	}
-	
 
 	if(static_run){
 		typeof result_handler === 'function' && result_handler(result);
 		console.log("\nTotal query cost: " + (new Date() - start_time) + " ms");
-		mongo.closeDb();
+		//mongo.closeDb();
 	} else{
 		queryTicket(result, function(all_solutions){
 			/* 
@@ -163,7 +257,7 @@ function processRoutes(dr, r1, r2, result_handler) {
 			*/
 			typeof result_handler === 'function' && result_handler(all_solutions);
 			console.log("\nTotal query cost: " + (new Date() - start_time) + " ms");
-			mongo.closeDb();
+			//mongo.closeDb();
 		});
 	}
 }
@@ -171,9 +265,9 @@ function processRoutes(dr, r1, r2, result_handler) {
 function getRequiredSeatPrice(seat_price) {
 	var result = {min_price: Infinity};
 	
-	// get only required seat price (specified by required_seat_num). other seat price will be ignored.
+	// get only required seat price (specified by seat_type). other seat price will be ignored.
 	for(var prop in seat_price) {
-		if(required_seat_num[seat.price_2_num_index[prop]] > 0 && seat_price[prop] <= max_price) {
+		if(input_param.seat_type[seat.price_2_num_index[prop]] > 0 && seat_price[prop] <= input_param.max_price) {
 			result.min_price = Math.min(seat_price[prop], result.min_price);
 			result[prop] = seat_price[prop];
 		}
@@ -183,7 +277,7 @@ function getRequiredSeatPrice(seat_price) {
 }
  
 function canTransfer(r1, r2) {
-	if(same_station_transfer) {
+	if(input_param.same_station_transfer) {
 		return r1.end === r2.start;
 	} else {
 		// all start_same_stations.length and end_same_stations.length are > 0 (checked by test/checkEmptySameStations.js)
@@ -195,7 +289,13 @@ function canTransfer(r1, r2) {
 function isDirectQualified(duration, seat_price, start_time, end_time) {
 	var start_time_hour = new Date('2015-03-15,' + start_time).getHours(),
 		end_time_hour = new Date('2015-03-15,' + end_time).getHours();
-	return hasTicket(seat_price) && duration <= max_duration && start_time_hour >= start_time_range[0] && start_time_hour < start_time_range[1] && end_time_hour >= end_time_range[0] && end_time_hour < end_time_range[1];
+	return hasTicket(seat_price)
+		&& duration <= input_param.max_duration
+		&& seat_price.min_price <= input_param.max_price
+		&& start_time_hour >= input_param.start_time_range[0]
+		&& start_time_hour < input_param.start_time_range[1]
+		&& end_time_hour >= input_param.end_time_range[0]
+		&& end_time_hour < input_param.end_time_range[1];
 }
  
 function isTransferQualified(duration1, wait_time, duration2, seat_price1, seat_price2, start_time, end_time) {
@@ -203,7 +303,16 @@ function isTransferQualified(duration1, wait_time, duration2, seat_price1, seat_
 		total_min_price = seat_price1.min_price + seat_price2.min_price,
 		start_time_hour = new Date('2015-03-15,' + start_time).getHours(),
 		end_time_hour = new Date('2015-03-15,' + end_time).getHours();
-	return hasTicket(seat_price1) && hasTicket(seat_price2) && wait_time >= min_wait_time && wait_time <= max_wait_time && total_duration <= max_duration && total_min_price <= max_price && start_time_hour >= start_time_range[0] && start_time_hour < start_time_range[1] && end_time_hour >= end_time_range[0] && end_time_hour < end_time_range[1];
+	return hasTicket(seat_price1)
+		&& hasTicket(seat_price2)
+		&& wait_time >= input_param.min_wait_time
+		&& wait_time <= input_param.max_wait_time
+		&& total_duration <= input_param.max_duration
+		&& total_min_price <= input_param.max_price
+		&& start_time_hour >= input_param.start_time_range[0]
+		&& start_time_hour < input_param.start_time_range[1]
+		&& end_time_hour >= input_param.end_time_range[0]
+		&& end_time_hour < input_param.end_time_range[1];
 }
 
 function sortByDuration(r1, r2) {
@@ -239,7 +348,7 @@ function compareBackupSolution(solution1, solution2) {
 function queryTicket(routes, callback) {
 	var current_index = 0;
 	var all_solutions = [];
-	logMessage("[queryTicket] start to query maximum " + max_solutions + " solutions");
+	logMessage("[queryTicket] start to query maximum " + input_param.max_solutions + " solutions");
 	var cb = function(solution){
 		/* 
 			format of solution should be like
@@ -255,9 +364,9 @@ function queryTicket(routes, callback) {
 			logMessage("[queryTicket] find available solution " + current_index + ": " + JSON.stringify(solution));
 		}
 		
-		if(solution == null || current_index >= max_solutions) {
+		if(solution == null || current_index >= input_param.max_solutions) {
 			//solution == null means all candidate solutions have been searched.
-			for(var i = 0; i < (max_solutions - current_index) && i < backup_solutions.length; i++) {
+			for(var i = 0; i < (input_param.max_solutions - current_index) && i < backup_solutions.length; i++) {
 				// if solution number doesn't reach to max_solutions, and backup_solutions has remained solutions, then add them to the final solution
 				logMessage("[queryTicket] find available solution " + (i + current_index + 1) + " from backup solutions: " + JSON.stringify(backup_solutions[i]));
 				all_solutions.push(backup_solutions[i]);
@@ -308,7 +417,7 @@ function queryTicketRecur(i, routes, callback) {
 				current_solution.ticket = route_tickets;
 				current_solution.min_price = actual_min_price;
 				
-				if(preference === "price") {
+				if(input_param.order_by === "price") {
 					// if price preference is selected, then need special treatment.
 					if(actual_min_price !== routes[i].min_price) {
 						// if min_price doesn't keep same as original, then backup this solution, and query next ticket
@@ -348,12 +457,12 @@ function queryTicketRecur(i, routes, callback) {
 		if(routes[i].transfer != null) {
 			tickets_need_query = 2;
 			logMessage("[queryTicketRecur] query transfer for " + routes[i].train_code[0] + " and " + routes[i].train_code[1]);
-			queryTicketInternal(date, routes[i].start, routes[i].transfer[0], routes[i].train_code[0], routes[i].seat_price[0], 0, cb);
-			queryTicketInternal(utility.getActualDate(date, routes[i].start_time[0], routes[i].duration[0] + routes[i].wait_time), routes[i].transfer[1], routes[i].end, routes[i].train_code[1], routes[i].seat_price[1], 1, cb);
+			queryTicketInternal(input_param.date, routes[i].start, routes[i].transfer[0], routes[i].train_code[0], routes[i].seat_price[0], 0, cb);
+			queryTicketInternal(utility.getActualDate(input_param.date, routes[i].start_time[0], routes[i].duration[0] + routes[i].wait_time), routes[i].transfer[1], routes[i].end, routes[i].train_code[1], routes[i].seat_price[1], 1, cb);
 		} else {
 			tickets_need_query = 1;
 			logMessage("[queryTicketRecur] query direct for " + routes[i].train_code);
-			queryTicketInternal(date, routes[i].start, routes[i].end, routes[i].train_code, routes[i].seat_price, 0, cb);
+			queryTicketInternal(input_param.date, routes[i].start, routes[i].end, routes[i].train_code, routes[i].seat_price, 0, cb);
 		}
 	} else {
 		typeof callback === 'function' && callback.call(this, null);
@@ -401,11 +510,13 @@ function getTrainTicketInfo(train_code, ticket_info, seat_price) {
 			// it is probably that we can't find the specified train_code across all trains, e.g. K533 from 上海南 to 金华 is only opened in 2015-04-01, so when date change to 2015-04-02, we can't find K533 any more
 			if(ticket_info[i].station_train_code === train_code) {
 				// search required seat ticket
+				var total_ticket_num = 0;
 				for(var prop in seat_price) {
 					if(prop !== 'min_price') {
 						var index = seat.price_2_num_index[prop],
 							ticket_num = parseInt(ticket_info[i][seat_num_code[index]]);
-						if(!isNaN(ticket_num) && ticket_num >= required_seat_num[index]) {
+						if(!isNaN(ticket_num) && ticket_num > 0) {
+							total_ticket_num += ticket_num;
 							num[seat_num_code[index]] = ticket_num;
 							price[prop] = seat_price[prop];
 							// need recalculate actual min_price due to the variation of the ticket number
@@ -414,10 +525,13 @@ function getTrainTicketInfo(train_code, ticket_info, seat_price) {
 					}
 				}
 				
-				// assign an actual min_price in min_price field
-				price['min_price'] = min_price;
-				result.num = num;
-				result.price = price;
+				// total_ticket_num should not be less than required ticket_num, or just return an empty result
+				if(total_ticket_num >= input_param.ticket_num) {
+					// assign an actual min_price in min_price field
+					price['min_price'] = min_price;
+					result.num = num;
+					result.price = price;
+				}
 				break;
 			}
 		}
@@ -446,75 +560,21 @@ function logMessage(msg, display_in_console) {
 	utility.logMessage(log_file, msg, "routeFinder", display);
 }
 
-var date,
-	from,
-	to,
-	min_wait_time,
-	max_wait_time,
-	preference,
-	start_time_range,
-	end_time_range,
-	required_seat_num,
-	max_solutions,
-	max_duration,
-	max_price,
-	same_station_transfer;
-function init(args) {
-	date = args[0];
-	from = args[1];
-	to = args[2];
-	min_wait_time = args[3];
-	max_wait_time = args[4];
-	preference = args[5];								// valid value: "time" or "price"
-	max_solutions = (args[6] || 5);						// optional parameter. default value: 5.
-	same_station_transfer = (args[7] === 'true');		// optional parameter (compared to same_city_transfer). default value: false.
-	max_duration = args[8] || Infinity;					// optional parameter
-	max_price = args[9] || Infinity;					// optional parameter
-	start_time_range = args[10];							// optional parameter. e.g. [8,10] which means 8:00 - 10:00
-	end_time_range = args[11];							// optional parameter. same as above.
-	required_seat_num = args[12];						// optional parameter. format like [2,3,0,0,5,0,0,0,2,0,0], corresponds to seat definition in data/seat.js. default value: all 1
-	
-	required_seat_num = required_seat_num || '[1,1,1,1,1,1,1,1,1,1,1]';
-	required_seat_num = JSON.parse(required_seat_num);
-	if(required_seat_num.length !== seat_num_code.length) {
-		console.log('[required_seat_num] should be length ' + seat_num_code.length);
-		return false;
-	}
-	
-	if(preference !== 'time' && preference !== 'price') {
-		console.log('[preference] should be "time" or "price".');
-		return false;
-	}
-	
-	start_time_range = start_time_range || '[0,24]';
-	start_time_range = JSON.parse(start_time_range);
-	end_time_range = end_time_range || '[0,24]';
-	end_time_range = JSON.parse(end_time_range);
-	if(start_time_range.length !== 2 || end_time_range.length !== 2 || start_time_range[0] > start_time_range[1] || end_time_range[0] > end_time_range[1]) {
-		console.log('format of [start_time_range] or [end_time_range] should be like [XX,YY] where XX and YY are both valid hours (0~24), and XX should <= YY');
-		return false;
-	}
-	
-	start_time_range[0] = start_time_range[0] < 0 ? 0 : (start_time_range[0] > 24 ? 24 : start_time_range[0]);
-	start_time_range[1] = start_time_range[1] < 0 ? 0 : (start_time_range[1] > 24 ? 24 : start_time_range[1]);
-	end_time_range[0] = end_time_range[0] < 0 ? 0 : (end_time_range[0] > 24 ? 24 : end_time_range[0]);
-	end_time_range[1] = end_time_range[1] < 0 ? 0 : (end_time_range[1] > 24 ? 24 : end_time_range[1]);
-	
-	max_price *= 10;
-	return true;
+var error_msg = "";
+function setErrorMessage(msg) {
+	error_msg = msg;
+	logError(msg);
 }
 
-var static_run;
-function run(args, get_static_result, result_handler) {
+var input_param;
+function run(input, get_static_result, result_handler, error_handler) {
 	static_run = (get_static_result === true);
 	
-	if(args.length < 6) {
-		console.log('please provide following arguments: [date] [from] [to] [min_wait_time] [max_wait_time] [preference] [max_solutions] [same_station_transfer] [max_duration] [max_price] [start_time_range] [end_time_range] [required_seat_num]');
-		return;
-	}
-	
-	if(init(args)){
-		findAllRoutes(result_handler);
+	if(check(input)){
+		input_param = input;
+		findAllRoutes(result_handler, error_handler);
+	} else {
+		typeof error_handler === 'function' && error_handler(error_msg);
 	}
 }
 
