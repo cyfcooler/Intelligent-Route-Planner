@@ -487,7 +487,7 @@ function queryTicketInternal(date, from, to, train_code, seat_price, index, cb) 
 			
 			// for no ticket data condition, set cache to [] to prevent query data from 12306 again.
 			// for query error, set cache to null so it can query again next time.
-			cache[key] = msg.data.flag === false ? [] : ((msg.data != null && msg.status) ? msg.data.datas : null);
+			cache[key] = (msg.data != null && msg.data.flag === false) ? [] : ((msg.data != null && msg.status) ? msg.data.datas : null);
 			result = getTrainTicketInfo(train_code, cache[key], seat_price);
 			logMessage('[queryTicketInternal] get ticket info ' + date + ': ' + from + ' -> ' + to + ' from 12306: ' + JSON.stringify(result));
 			typeof cb === 'function' && cb.call(this, index, result);
