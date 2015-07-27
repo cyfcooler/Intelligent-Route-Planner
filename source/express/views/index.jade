@@ -1,22 +1,21 @@
 extends layout
 
 block content
+    script(type='text/javascript', src='/javascripts/echarts-all.js')
+    script(type='text/javascript', src='/javascripts/station.js')
 
     // Wrapper
     #wrapper
-
-        // TRAIN INFO
-        #train_info
 
         h2 Query Train
         #query_train
             fieldset
                 #required_input
                     #required_input_title Required Input
-                    input#date(type='text', placeholder='Date', value='2015-04-10')
-                    input#from(type='text', placeholder='From', value='BJP')
+                    input#date(type='text', placeholder='Date', value='2015-04-20')
+                    input#from(type='text', placeholder='From', value='HBB')
                     input#to(type='text', placeholder='To', value='JBH')
-                    input#order_by(type='text', placeholder='Preference', value='price')
+                    input#order_by(type='text', placeholder='Preference', value='time')
                 br
                 #optional_input
                     #optional_input_title Optional Input
@@ -35,4 +34,30 @@ block content
                     input#ticket_num(type='text', placeholder='TicketNumber')
                 button#btnQueryTrain Query Train
 
+        br
+
+        #graphic.col-md-8
+            #main.main(style='height: 530px;')
+            div
+                button.btn.btn-sm.btn-success(type='button', onclick='refresh(true)') 刷 新
+                span.text-primary 切换主题
+                select#theme-select
+                span#wrong-message(style='color:red')
+
+        table.table.table-hover
+            thead
+                tr
+                    th #
+                    th 车次
+                    th 起点
+                    th 终点
+                    th 出发时间
+                    th 到达时间
+                    th 车票数量
+                    th 车票价格
+                    th 耗时
+            tbody#data-row
+
+        // TRAIN INFO
+        #train_info
     // /WRAPPER
