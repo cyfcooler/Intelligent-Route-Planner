@@ -61,6 +61,9 @@ $(document).ready(function() {
     
     // Add User button click
     $('#btnQueryTrain').on('click', queryTrain);
+    
+    // Add Date
+    $('input#date').val(getNextDate());
 
 });
 
@@ -84,7 +87,7 @@ function queryTrain(event) {
     
     console.log(args);
 
-    // Use AJAX to post the object to our adduser service
+    // Use AJAX to post the object to our querytrain service
     $.ajax({
         type: 'POST',
         data: {'args': JSON.stringify(args)},
@@ -108,6 +111,20 @@ function queryTrain(event) {
 
         }
     });
+};
+
+function getNextDate() {
+    var cur = new Date();
+    cur.setDate(cur.getDate() + 1);
+    var month = cur.getMonth() + 1,
+        date = cur.getDate();
+    if(month <= 9) {
+        month = "0" + month;
+    }
+    if(date <= 9) {
+        date = "0" + date;
+    }
+    return cur.getFullYear() + '-' + month + '-' + date;
 };
 
 // echarts
