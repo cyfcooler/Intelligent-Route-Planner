@@ -1,0 +1,63 @@
+extends layout
+
+block content
+    script(type='text/javascript', src='/javascripts/echarts-all.js')
+    script(type='text/javascript', src='/javascripts/station.js')
+
+    // Wrapper
+    #wrapper
+
+        h2 Query Train
+        #query_train
+            fieldset
+                #required_input
+                    #required_input_title Required Input
+                    input#date(type='text', placeholder='Date')
+                    input#from(type='text', placeholder='From', value='HBB')
+                    input#to(type='text', placeholder='To', value='JBH')
+                    input#order_by(type='text', placeholder='Preference', value='time')
+                br
+                #optional_input
+                    #optional_input_title Optional Input
+                    input#consider_transfer(type='text', placeholder='ConsiderTransfer')
+                    input#min_wait_time(type='text', placeholder='MinWaitTime')
+                    input#max_wait_time(type='text', placeholder='MaxWaitTime')
+                    input#same_station_transfer(type='text', placeholder='SameStationTransfer')
+                    br
+                    input#max_solutions(type='text', placeholder='MaxSolutions')
+                    input#max_duration(type='text', placeholder='MaxDuration')
+                    input#max_price(type='text', placeholder='MaxPrice')
+                    br
+                    input#start_time_range(type='text', placeholder='StartTimeRange')
+                    input#end_time_range(type='text', placeholder='EndTimeRange')
+                    input#seat_type(type='text', placeholder='RequiredSeatType')
+                    input#ticket_num(type='text', placeholder='TicketNumber')
+                button#btnQueryTrain Query Train
+
+        br
+
+        #graphic.col-md-8
+            #main.main(style='height: 530px;')
+            div
+                button.btn.btn-sm.btn-success(type='button', onclick='refresh(true)') 刷 新
+                span.text-primary 切换主题
+                select#theme-select
+                span#wrong-message(style='color:red')
+
+        table.table.table-hover
+            thead
+                tr
+                    th #
+                    th 车次
+                    th 起点
+                    th 终点
+                    th 出发时间
+                    th 到达时间
+                    th 车票数量
+                    th 车票价格
+                    th 耗时
+            tbody#data-row
+
+        // TRAIN INFO
+        #train_info
+    // /WRAPPER

@@ -323,8 +323,7 @@ function sortByPrice(r1, r2) {
 	return (r1.min_price !== r2.min_price) ? (r1.min_price - r2.min_price) : (r1.total_duration - r2.total_duration);
 }
 
-var backup_solutions = [];
-function pushAsBackup(solution) {
+function pushAsBackup(solution, backup_solutions) {
 	var len = backup_solutions.length;
 	if(len === 0 || compareBackupSolution(backup_solutions[len - 1], solution)) {
 		backup_solutions.push(solution);
@@ -348,6 +347,8 @@ function compareBackupSolution(solution1, solution2) {
 function queryTicket(routes, callback) {
 	var current_index = 0;
 	var all_solutions = [];
+	var backup_solutions = [];
+	var ticket_cache = {};
 	logMessage("[queryTicket] start to query maximum " + input_param.max_solutions + " solutions");
 	var cb = function(solution){
 		/* 
@@ -374,14 +375,14 @@ function queryTicket(routes, callback) {
 			logMessage("[queryTicket] all query done. find total " + all_solutions.length + " solutions.", true);
 			typeof callback === 'function' && callback.call(this, all_solutions);
 		} else {
-			queryTicketRecur(current_index, routes, cb);
+			queryTicketRecur(current_index, routes, cb, backup_solutions, ticket_cache);
 		}
 	};
 	
-	queryTicketRecur(current_index, routes, cb);
+	queryTicketRecur(current_index, routes, cb, backup_solutions, ticket_cache);
 }
 
-function queryTicketRecur(i, routes, callback) {
+function queryTicketRecur(i, routes, callback, backup_solutions, ticket_cache) {
 	var tickets_need_query = 0;
 	var success = true;
 	var route_tickets = [];
@@ -425,9 +426,9 @@ function queryTicketRecur(i, routes, callback) {
 						logMessage("[queryTicketRecur] original min_price: " + routes[i].min_price);
 						logMessage("[queryTicketRecur] actual min_price: " + actual_min_price);
 						assert(actual_min_price > routes[i].min_price);
-						pushAsBackup(current_solution);
+						pushAsBackup(current_solution, backup_solutions);
 						routes.splice(i, 1);
-						queryTicketRecur(i, routes, callback);
+						queryTicketRecur(i, routes, callback, backup_solutions, ticket_cache);
 					} else {
 						if(backup_solutions.length > 0 && compareBackupSolution(backup_solutions[0], current_solution)){
 							// if backup_solutions[0] is better than current solution, then get backup_solutions[0] as result, and update related record
@@ -437,7 +438,7 @@ function queryTicketRecur(i, routes, callback) {
 							routes.splice(i, 1, backup_solutions[0].route);
 							var previous_solution = current_solution;
 							current_solution = backup_solutions.shift().ticket;
-							pushAsBackup(previous_solution);
+							pushAsBackup(previous_solution, backup_solutions);
 						}
 						typeof callback === 'function' && callback.call(this, current_solution);
 					}
@@ -447,7 +448,7 @@ function queryTicketRecur(i, routes, callback) {
 			} else {
 				// no ticket for current route. query next route
 				routes.splice(i, 1);
-				queryTicketRecur(i, routes, callback);
+				queryTicketRecur(i, routes, callback, backup_solutions, ticket_cache);
 			}
 		}
 	};
@@ -457,20 +458,19 @@ function queryTicketRecur(i, routes, callback) {
 		if(routes[i].transfer != null) {
 			tickets_need_query = 2;
 			logMessage("[queryTicketRecur] query transfer for " + routes[i].train_code[0] + " and " + routes[i].train_code[1]);
-			queryTicketInternal(input_param.date, routes[i].start, routes[i].transfer[0], routes[i].train_code[0], routes[i].seat_price[0], 0, cb);
-			queryTicketInternal(utility.getActualDate(input_param.date, routes[i].start_time[0], routes[i].duration[0] + routes[i].wait_time), routes[i].transfer[1], routes[i].end, routes[i].train_code[1], routes[i].seat_price[1], 1, cb);
+			queryTicketInternal(input_param.date, routes[i].start, routes[i].transfer[0], routes[i].train_code[0], routes[i].seat_price[0], 0, cb, ticket_cache);
+			queryTicketInternal(utility.getActualDate(input_param.date, routes[i].start_time[0], routes[i].duration[0] + routes[i].wait_time), routes[i].transfer[1], routes[i].end, routes[i].train_code[1], routes[i].seat_price[1], 1, cb, ticket_cache);
 		} else {
 			tickets_need_query = 1;
 			logMessage("[queryTicketRecur] query direct for " + routes[i].train_code);
-			queryTicketInternal(input_param.date, routes[i].start, routes[i].end, routes[i].train_code, routes[i].seat_price, 0, cb);
+			queryTicketInternal(input_param.date, routes[i].start, routes[i].end, routes[i].train_code, routes[i].seat_price, 0, cb, ticket_cache);
 		}
 	} else {
 		typeof callback === 'function' && callback.call(this, null);
 	}
 }
- 
-var cache = {};
-function queryTicketInternal(date, from, to, train_code, seat_price, index, cb) {
+
+function queryTicketInternal(date, from, to, train_code, seat_price, index, cb, cache) {
 	var result = {},
 		key = date + ':' + from + '_' + to;
 	if(cache[key] == null) {
@@ -570,6 +570,7 @@ var input_param;
 function run(input, get_static_result, result_handler, error_handler) {
 	static_run = (get_static_result === true);
 	
+	start_time = new Date();
 	if(check(input)){
 		input_param = input;
 		findAllRoutes(result_handler, error_handler);

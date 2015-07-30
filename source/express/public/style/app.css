@@ -1,0 +1,191 @@
+﻿body {
+    font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    max-width: 768px;
+}
+
+.flex-row-center-align {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.logo-line {
+    margin: 0 10px;
+}
+
+.logo {
+    font-size: x-large;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+.logo-text {
+    padding: 0 10px;
+}
+
+.main-container {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+.my-input-group {
+    margin: 10px;
+}
+
+.my-input-field {
+    text-align: left;
+}
+
+.dropdown-icon {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 2;
+}
+
+.advanced-options {
+    text-align: left;
+    padding: 0 20px;
+}
+
+.advanced-options-text {
+    font-size: 14px;
+    text-decoration: none;
+    color: #005A9E;
+}
+
+.time-range {
+    margin-bottom: 10px;
+}
+
+.query-button {
+    width: 50%;
+}
+
+.accordion-panel-title {
+    margin-top: 0;
+    margin-bottom: 0;
+    color: inherit;
+}
+
+.city-name {
+    padding: 0 15px;
+}
+
+.result-panel {
+    display: none;
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.result-panel-header {
+    width: 100%;
+    height: 40px;
+    background-color: #2B88D8;
+    border-bottom: 2px solid #0078D7
+}
+
+.result-back-button {
+    font-size: large;
+    width: 40px;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.result-panel-title {
+    width: calc(100% - 80px);
+    text-align: center;
+}
+
+.result-container {
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 40px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.result-block {
+    width: 100%;
+    padding: 10px;
+    border-bottom: 1px solid #C8C8C8;
+}
+
+.result-panel .result-block:nth-child(even) {
+    background-color: #EAEAEA;
+}
+
+.result-row {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.result-total-price-row {
+    height: 20px;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.result-total-price-1 {
+    width: 70%;
+    text-align: right;
+}
+.result-total-price-2 {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    width: 30%;
+}
+
+.result-time {
+    width: 20%;
+}
+
+.result-info {
+    width: 50%;
+}
+
+.result-price {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    width: 30%;
+}
+
+.seperator-row {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    height: 18px;
+}
+
+.seperator-text {
+    padding: 1px;
+    background-color: #71AFE5;
+}
+.separator-line {
+    width: 88%;
+    height: 1px;
+    border-top: 1px dashed #71AFE5;
+}
